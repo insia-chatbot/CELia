@@ -26,7 +26,7 @@ load_dotenv()
 
 @st.cache_resource(show_spinner=False)
 def load_data():
-    with st.spinner("Chargement des données pédagogiques..."):
+    with st.spinner("Chargement..."):
         loader = TextLoader('regetude.txt')
         documents = loader.load()
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=4)
