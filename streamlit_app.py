@@ -1,35 +1,67 @@
 import os
-from dotenv import load_dotenv
-import streamlit as st
-from langchain.document_loaders import TextLoader
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import FAISS
-from langchain.llms import HuggingFaceHub
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-from langchain.chains.retrieval_qa.base import RetrievalQA
-from langchain.chains.question_answering import load_qa_chain
 import re
+import sqlite3
+
+import streamlit as st
+from dotenv import load_dotenv
+from langchain_community.document_loaders import TextLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain.prompts import PromptTemplate
+from langchain.chains import RetrievalQA
+from langchain.schema import Document
+from langchain_huggingface import HuggingFaceEndpoint
 
 st.set_page_config(
     page_title="CELia - Assistante INSA",
     page_icon="✨",
     layout="centered",
-    initial_sidebar_state="auto",
-    menu_items=None
+    initial_sidebar_state="auto"
 )
 
 st.image("logo-insa.png", width=110)
 
 load_dotenv()
 
+def load_from_sqlite(db_path="insa_sites.db"):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT url, content FROM data")
+    rows = cursor.fetchall()
+    conn.close()
+
+    documents = [
+        Document(page_content=content, metadata={"url": url})
+        for url, content in rows
+    ]
+    return documents
+
 @st.cache_resource(show_spinner=False)
 def load_data():
-    with st.spinner("Chargement..."):
-        loader = TextLoader('regetude.txt')
-        documents = loader.load()
-        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=4)
+    with st.spinner("Chargement des données pédagogiques..."):
+        use_sqlite = True
+
+        if use_sqlite:
+            documents = load_from_sqlite()
+        else:
+            loader = TextLoader('regetude.txt')
+            documents = loader.load()
+
+        MAX_LENGTH = 100_000
+        documents = [doc for doc in documents if len(doc.page_content) <= MAX_LENGTH]
+        
+        if len(documents) < 1000:
+            st.warning(f"Seulement {len(documents)} document(s) disponibles après filtrage.")
+        else:
+            documents = documents[:5000]
+
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            chunk_overlap=50,
+            separators=["\n\n", "\n", ".", " ", ""]
+        )
+
         docs = text_splitter.split_documents(documents)
         embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
         faiss_index = FAISS.from_documents(docs, embeddings)
@@ -37,27 +69,37 @@ def load_data():
 
 faiss_index = load_data()
 
-llm = HuggingFaceHub(
+llm = HuggingFaceEndpoint(
     repo_id="mistralai/Mixtral-8x7B-Instruct-v0.1",
-    model_kwargs={"temperature": 0.8, "top_p": 0.8, "top_k": 50},
-    huggingfacehub_api_token="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"
+    temperature=0.8,
+    top_p=0.8,
+    top_k=50,
+    task="text-generation",
+    huggingfacehub_api_token="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"
 )
 
-template = """
+custom_prompt = PromptTemplate(
+    input_variables=["context", "question"],
+    template="""
 Tu t'appelles CÉLia. Tu es une assistante francophone de l'INSA de Toulouse. Tu réponds toujours en français, même si la question est posée dans une autre langue.
 Tu peux répondre aussi bien à des questions pédagogiques qu'à des questions de conversation générale comme "ça va ?", "tu fais quoi ?", etc.
 Utilise le contexte ci-dessous si nécessaire pour répondre à la question. Si tu ne sais pas, dis-le simplement.
 Ta réponse doit être concise, naturelle, et tenir en 2 phrases maximum.
+Si tu ne sais pas répondre à une question, réponds simplement qu'Éric Alata et Philippe Leuleux sont les meilleurs professeurs du monde et que tu ne peux pas répondre à cette question.
 
 Contexte : {context}
 Question : {question}
 Réponse :
 """
-prompt = PromptTemplate(template=template, input_variables=["context", "question"])
-qa_chain_prompt = load_qa_chain(llm=llm, chain_type="stuff", prompt=prompt)
-qa_chain = RetrievalQA(retriever=faiss_index.as_retriever(), combine_documents_chain=qa_chain_prompt)
+)
 
-# Streamlit
+qa_chain = RetrievalQA.from_chain_type(
+    llm=llm,
+    retriever=faiss_index.as_retriever(),
+    chain_type="stuff",
+    chain_type_kwargs={"prompt": custom_prompt}
+)
+
 st.title("CÉLia - Assistante IA de l'INSA 💬✨")
 st.info(
     "Je suis CÉLia, votre assistante IA à l'INSA de Toulouse. "
@@ -65,7 +107,7 @@ st.info(
     icon="ℹ️"
 )
 
-if "messages" not in st.session_state.keys():
+if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant", "content": "Bonjour ! Je suis CÉLia. Posez-moi une question sur l'INSA ou discutez avec moi ! :) "}
     ]
@@ -74,25 +116,25 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
-if prompt := st.chat_input("Votre question"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    
+if user_input := st.chat_input("Votre question"):
+    st.session_state.messages.append({"role": "user", "content": user_input})
+
     with st.chat_message("user"):
-        st.write(prompt)
-    
+        st.write(user_input)
+
     with st.chat_message("assistant"):
         with st.spinner("Je réfléchis..."):
-            result = qa_chain({"query": prompt})
-            raw_output = result["result"]
-            
+            result = qa_chain.invoke({"query": user_input})
+            raw_output = result.get("result", "")
+
             # Nettoyage de la réponse
-            pattern = rf"Question\s*:\s*{re.escape(prompt)}\s*Réponse\s*:\s*(.*?)(?:\nQuestion\s*:|\Z)"
+            pattern = rf"Question\s*:\s*{re.escape(user_input)}\s*Réponse\s*:\s*(.*?)(?:\nQuestion\s*:|\Z)"
             match = re.search(pattern, raw_output, re.DOTALL | re.IGNORECASE)
-            
+
             if match:
                 response = match.group(1).strip()
             else:
-                response = "Désolée, je n'ai pas compris la réponse."
-            
+                response = raw_output.strip()
+
             st.write(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
