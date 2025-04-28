@@ -6,3 +6,4 @@ langchain-huggingface
 huggingface_hub
 sentence-transformers
 faiss-cpu
+mysql-connector-python

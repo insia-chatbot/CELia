@@ -1,6 +1,7 @@
 import os
 import re
 import sqlite3
+import mysql.connector
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -36,25 +37,58 @@ def load_from_sqlite(db_path="insa_sites.db"):
         for url, content in rows
     ]
     return documents
+def load_from_mysql(host, database, user, password):
+    try:
+        conn = mysql.connector.connect(
+            host=host,
+            database=database,
+            user=user,
+            password=password
+        )
+        cursor = conn.cursor()
+        cursor.execute("SELECT url, content FROM data")
+        rows = cursor.fetchall()
+        conn.close()
+
+        documents = [
+            Document(page_content=content, metadata={"url": url})
+            for url, content in rows
+        ]
+        return documents    
+    except mysql.connector.Error as err:
+        print(f"Erreur MySQL: {err}")
+        return None
 
 @st.cache_resource(show_spinner=False)
 def load_data():
     with st.spinner("Chargement des données pédagogiques..."):
-        use_sqlite = True
+        use_bdd = True
 
-        if use_sqlite:
-            documents = load_from_sqlite()
+        if use_bdd:
+            host = "sql302.infinityfree.com"
+            database = "if0_38851199_celia_db"
+            user = "if0_38851199"
+            password = "LFj6NVaOeZud"
+            documents = load_from_mysql(host, database, user, password)
+            if documents is None:
+                st.warning("Erreur lors du chargement des données depuis la base de données MySQL. Chargement des données depuis la base de données SQLite")
+                documents = load_from_sqlite()
+            #documents = load_from_sqlite()  
         else:
             loader = TextLoader('regetude.txt')
             documents = loader.load()
 
+        if not documents:
+            st.error("Aucun document trouvé. Impossible de continuer.")
+            return None
+
         MAX_LENGTH = 100_000
         documents = [doc for doc in documents if len(doc.page_content) <= MAX_LENGTH]
         
-        if len(documents) < 1000:
+        if len(documents) < 200:
             st.warning(f"Seulement {len(documents)} document(s) disponibles après filtrage.")
         else:
-            documents = documents[:5000]
+            documents = documents[:200]
 
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
