@@ -40,7 +40,7 @@ faiss_index = load_data()
 llm = HuggingFaceHub(
     repo_id="mistralai/Mixtral-8x7B-Instruct-v0.1",
     model_kwargs={"temperature": 0.8, "top_p": 0.8, "top_k": 50},
-    huggingfacehub_api_token="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"
+    huggingfacehub_api_token="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"
 )
 
 template = """
