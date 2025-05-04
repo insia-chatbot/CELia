@@ -19,8 +19,10 @@ st.set_page_config(
     initial_sidebar_state="auto",
     menu_items=None
 )
+url = "https://raw.githubusercontent.com/insia-chatbot/Ian/0ea57f0aca3ce421355d62870d9fbf6f0752a1b9/logo-ian.png"
+st.image(url, output_format="PNG", width=200)
 
-st.image("logo-ian.png", width=110)
+#st.image("logo-ian.png", width=110)
 
 load_dotenv()
 
@@ -67,7 +69,7 @@ st.info(
 
 if "messages" not in st.session_state.keys():
     st.session_state.messages = [
-        {"role": "assistant", "content": "Bonjour ! Je suis CÉLia. Posez-moi une question sur l'INSA ou discutez avec moi ! :) "}
+        {"role": "assistant", "content": "Bonjour ! Je suis Ian. Posez-moi une question sur l'INSA ou discutez avec moi ! :) "}
     ]
 
 for message in st.session_state.messages:
@@ -92,7 +94,7 @@ if prompt := st.chat_input("Votre question"):
             if match:
                 response = match.group(1).strip()
             else:
-                response = "Désolée, je n'ai pas compris la réponse."
+                response = "Désolé, je n'ai pas compris."
             
             st.write(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
