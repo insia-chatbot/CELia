@@ -13,14 +13,14 @@ from langchain.chains.question_answering import load_qa_chain
 import re
 
 st.set_page_config(
-    page_title="CELia - Assistante INSA",
+    page_title="Ian - Assistant INSA",
     page_icon="✨",
     layout="centered",
     initial_sidebar_state="auto",
     menu_items=None
 )
 
-st.image("logo-insa.png", width=110)
+st.image("logo-ian.png", width=110)
 
 load_dotenv()
 
@@ -44,7 +44,7 @@ llm = HuggingFaceHub(
 )
 
 template = """
-Tu t'appelles CÉLia. Tu es une assistante francophone de l'INSA de Toulouse. Tu réponds toujours en français, même si la question est posée dans une autre langue.
+Tu t'appelles Ian. Tu es un assistant francophone de l'INSA de Toulouse. Tu réponds toujours en français, même si la question est posée dans une autre langue.
 Tu peux répondre aussi bien à des questions pédagogiques qu'à des questions de conversation générale comme "ça va ?", "tu fais quoi ?", etc.
 Utilise le contexte ci-dessous si nécessaire pour répondre à la question. Si tu ne sais pas, dis-le simplement.
 Ta réponse doit être concise, naturelle, et tenir en 2 phrases maximum.
@@ -58,9 +58,9 @@ qa_chain_prompt = load_qa_chain(llm=llm, chain_type="stuff", prompt=prompt)
 qa_chain = RetrievalQA(retriever=faiss_index.as_retriever(), combine_documents_chain=qa_chain_prompt)
 
 # Streamlit
-st.title("CÉLia - Assistante IA de l'INSA 💬✨")
+st.title("Ian - Assistant IA de l'INSA 💬✨")
 st.info(
-    "Je suis CÉLia, votre assistante IA à l'INSA de Toulouse. "
+    "Je suis Ian, votre assistant IA à l'INSA de Toulouse. "
     "Posez-moi vos questions !",
     icon="ℹ️"
 )
