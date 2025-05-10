@@ -15,7 +15,7 @@ from langchain.schema import Document
 from langchain_huggingface import HuggingFaceEndpoint
 
 st.set_page_config(
-    page_title="CELia - Assistante INSA",
+    page_title="IAN - Assistant INSA",
     page_icon="✨",
     layout="centered",
     initial_sidebar_state="auto"
@@ -37,13 +37,14 @@ def load_from_sqlite(db_path="insa_sites.db"):
         for url, content in rows
     ]
     return documents
-def load_from_mysql(host, database, user, password):
+def load_from_mysql(host, database, user, password, port):
     try:
         conn = mysql.connector.connect(
             host=host,
             database=database,
             user=user,
-            password=password
+            password=password,
+            port=port
         )
         cursor = conn.cursor()
         cursor.execute("SELECT url, content FROM data")
@@ -65,14 +66,16 @@ def load_data():
         use_bdd = True
 
         if use_bdd:
-            host = "sql302.infinityfree.com"
-            database = "if0_38851199_celia_db"
-            user = "if0_38851199"
-            password = "LFj6NVaOeZud"
-            documents = load_from_mysql(host, database, user, password)
+            host = "gateway01.eu-central-1.prod.aws.tidbcloud.com"
+            database = "IAN-database"
+            user = "23dLGqqq48TAXKk.root"
+            password = "sIR0uMJnVvmqmp2F"
+            port = 4000
+            documents = load_from_mysql(host, database, user, password, port)
             if documents is None:
-                st.warning("Erreur lors du chargement des données depuis la base de données MySQL. Chargement des données depuis la base de données SQLite")
-                documents = load_from_sqlite()
+                st.warning("Erreur lors du chargement des données depuis la base de données MySQL.")
+                #documents = load_from_sqlite()
+                return None
             #documents = load_from_sqlite()  
         else:
             loader = TextLoader('regetude.txt')
@@ -115,7 +118,7 @@ llm = HuggingFaceEndpoint(
 custom_prompt = PromptTemplate(
     input_variables=["context", "question"],
     template="""
-Tu t'appelles CÉLia. Tu es une assistante francophone de l'INSA de Toulouse. Tu réponds toujours en français, même si la question est posée dans une autre langue.
+Tu t'appelles IAN. Tu es un assistant francophone de l'INSA de Toulouse. Tu réponds toujours en français, même si la question est posée dans une autre langue.
 Tu peux répondre aussi bien à des questions pédagogiques qu'à des questions de conversation générale comme "ça va ?", "tu fais quoi ?", etc.
 Utilise le contexte ci-dessous si nécessaire pour répondre à la question. Si tu ne sais pas, dis-le simplement.
 Ta réponse doit être concise, naturelle, et tenir en 2 phrases maximum.
@@ -134,16 +137,16 @@ qa_chain = RetrievalQA.from_chain_type(
     chain_type_kwargs={"prompt": custom_prompt}
 )
 
-st.title("CÉLia - Assistante IA de l'INSA 💬✨")
+st.title("IAN - Assistant IA de l'INSA 💬✨")
 st.info(
-    "Je suis CÉLia, votre assistante IA à l'INSA de Toulouse. "
+    "Je suis IAN, votre assistant IA à l'INSA de Toulouse. "
     "Posez-moi vos questions !",
     icon="ℹ️"
 )
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Bonjour ! Je suis CÉLia. Posez-moi une question sur l'INSA ou discutez avec moi ! :) "}
+        {"role": "assistant", "content": "Bonjour ! Je suis IAN. Posez-moi une question sur l'INSA ou discutez avec moi ! :) "}
     ]
 
 for message in st.session_state.messages:
