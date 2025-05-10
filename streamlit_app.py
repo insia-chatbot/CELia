@@ -88,7 +88,7 @@ def load_data():
         MAX_LENGTH = 100_000
         documents = [doc for doc in documents if len(doc.page_content) <= MAX_LENGTH]
         
-        #documents = documents[:200]
+        documents = documents[:1000]
 
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
