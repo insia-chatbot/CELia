@@ -63,23 +63,18 @@ def load_from_mysql(host, database, user, password, port):
 @st.cache_resource(show_spinner=False)
 def load_data():
     with st.spinner("Chargement des données pédagogiques..."):
-        use_bdd = True
 
-        if use_bdd:
-            host = "gateway01.eu-central-1.prod.aws.tidbcloud.com"
-            database = "IAN-database"
-            user = "23dLGqqq48TAXKk.root"
-            password = "sIR0uMJnVvmqmp2F"
-            port = 4000
-            documents = load_from_mysql(host, database, user, password, port)
-            if documents is None:
-                st.warning("Erreur lors du chargement des données depuis la base de données MySQL.")
-                #documents = load_from_sqlite()
-                return None
-            #documents = load_from_sqlite()  
-        else:
-            loader = TextLoader('regetude.txt')
-            documents = loader.load()
+        host = "gateway01.eu-central-1.prod.aws.tidbcloud.com"
+        database = "IAN-database"
+        user = "23dLGqqq48TAXKk.root"
+        password = "sIR0uMJnVvmqmp2F"
+        port = 4000
+        documents = load_from_mysql(host, database, user, password, port)
+        if documents is None:
+            st.warning("Erreur lors du chargement des données depuis la base de données MySQL.")
+            return None
+        loader = TextLoader('regetude.txt')
+        documents += loader.load()
 
         if not documents:
             st.error("Aucun document trouvé. Impossible de continuer.")
