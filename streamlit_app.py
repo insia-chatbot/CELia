@@ -88,10 +88,7 @@ def load_data():
         MAX_LENGTH = 100_000
         documents = [doc for doc in documents if len(doc.page_content) <= MAX_LENGTH]
         
-        if len(documents) < 200:
-            st.warning(f"Seulement {len(documents)} document(s) disponibles après filtrage.")
-        else:
-            documents = documents[:200]
+        #documents = documents[:200]
 
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
