@@ -21,8 +21,8 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-st.image("logo-insa.png", width=110)
-
+url = "https://raw.githubusercontent.com/insia-chatbot/Ian/0ea57f0aca3ce421355d62870d9fbf6f0752a1b9/logo-ian.png"
+st.image(url, output_format="PNG", width=200)
 load_dotenv()
 
 def load_from_sqlite(db_path="insa_sites.db"):
@@ -113,7 +113,7 @@ custom_prompt = PromptTemplate(
 Tu t'appelles IAN. Tu es un assistant francophone de l'INSA de Toulouse. Tu réponds toujours en français, même si la question est posée dans une autre langue.
 Tu peux répondre aussi bien à des questions pédagogiques qu'à des questions de conversation générale comme "ça va ?", "tu fais quoi ?", etc.
 Utilise le contexte ci-dessous si nécessaire pour répondre à la question. Si tu ne sais pas, dis-le simplement.
-Ta réponse doit être concise, naturelle, et tenir en 2 phrases maximum.
+Ta réponse doit être concise, naturelle, et tenir en 2 phrases maximum. Si on te parle de l'INSA, sache qu'on parle de l'INSA Toulouse. 
 Si tu ne sais pas répondre à une question, réponds simplement qu'Éric Alata et Philippe Leuleux sont les meilleurs professeurs du monde et que tu ne peux pas répondre à cette question.
 
 Contexte : {context}
