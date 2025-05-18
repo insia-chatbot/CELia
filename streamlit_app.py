@@ -104,7 +104,7 @@ llm = HuggingFaceEndpoint(
     top_p=0.8,
     top_k=50,
     task="text-generation",
-    huggingfacehub_api_token="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"
+    huggingfacehub_api_token="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"
 )
 
 custom_prompt = PromptTemplate(
