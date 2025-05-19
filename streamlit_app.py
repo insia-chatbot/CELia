@@ -47,7 +47,7 @@ def load_from_mysql(host, database, user, password, port):
             port=port
         )
         cursor = conn.cursor()
-        cursor.execute("SELECT url, content FROM data")
+        cursor.execute("SELECT url, content FROM DATA_WITH_MORE_DATE")
         rows = cursor.fetchall()
         conn.close()
 
@@ -67,7 +67,7 @@ def load_data():
         host = "gateway01.eu-central-1.prod.aws.tidbcloud.com"
         database = "IAN-database"
         user = "23dLGqqq48TAXKk.root"
-        password = "sIR0uMJnVvmqmp2F"
+        password = "s1E3QyLeFeh4k5xZ"
         port = 4000
         documents = load_from_mysql(host, database, user, password, port)
         if documents is None:
